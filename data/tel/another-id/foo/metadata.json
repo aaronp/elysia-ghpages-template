@@ -1,0 +1,7 @@
+{
+  "tags": [
+    "TEL"
+  ],
+  "summary": "TEL sample subtree",
+  "description": "Demonstrates nested path mapping into REST endpoints."
+}

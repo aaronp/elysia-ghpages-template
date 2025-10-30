@@ -1,0 +1,7 @@
+{
+  "tags": [
+    "KEL"
+  ],
+  "summary": "Sample KEL directory",
+  "description": "All *.json files in this folder are exposed as GET endpoints."
+}
