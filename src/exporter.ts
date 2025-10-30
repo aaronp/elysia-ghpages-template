@@ -104,6 +104,11 @@ const html = `<!doctype html>
               } else {
                 u = base + u;
               }
+              // Append .json for API routes so static hosting finds files
+              var needsJson = (u.indexOf('/kel/') >= 0 || u.indexOf('/ksn/') >= 0 || u.indexOf('/tel/') >= 0);
+              if (needsJson && u.slice(-5).toLowerCase() !== '.json') {
+                u = u + '.json';
+              }
               req.url = u;
             }
           } catch (e) {}
