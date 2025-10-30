@@ -1,4 +1,4 @@
-import { mkdirSync } from 'node:fs'
+import { mkdirSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { generateApi } from 'swagger-typescript-api'
 
@@ -8,6 +8,9 @@ const OUT_DIR = join(process.cwd(), 'src', 'api')
 async function main() {
   const openapiUrl = process.env.OPENAPI_URL || ''
   const useUrl = /^https?:\/\//i.test(openapiUrl)
+  if (!useUrl && !existsSync(DEFAULT_LOCAL_SPEC)) {
+    throw new Error(`OpenAPI spec not found. Set OPENAPI_URL or run 'bun run export' in repo root before generating. Expected local spec at: ${DEFAULT_LOCAL_SPEC}`)
+  }
   const input = useUrl ? { url: openapiUrl } : { input: DEFAULT_LOCAL_SPEC }
 
   console.log('Generating client from', useUrl ? openapiUrl : DEFAULT_LOCAL_SPEC)
