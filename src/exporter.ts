@@ -90,12 +90,21 @@ const html = `<!doctype html>
         // so "/kel/..." becomes "/<repo>/kel/..." when hosted under Pages.
         requestInterceptor: function (req) {
           try {
-            var pageDir = window.location.pathname.replace(/\/[^/]*$/, '/');
+            var path = window.location.pathname;
+            var lastSlash = path.lastIndexOf('/');
+            var pageDir = lastSlash >= 0 ? path.slice(0, lastSlash + 1) : '/';
             var base = pageDir.charAt(pageDir.length - 1) === '/' ? pageDir : (pageDir + '/');
-            if (/^\//.test(req.url)) {
-              req.url = base + req.url.slice(1);
-            } else if (!/^https?:\/\//i.test(req.url)) {
-              req.url = base + req.url.replace(/^\.\/?/, '');
+
+            var u = req.url;
+            var isHttp = /^https?:\/\//i.test(u);
+            if (!isHttp) {
+              if (u.slice(0, 2) === './') u = u.slice(2);
+              if (u.charAt(0) === '/') {
+                u = base + u.slice(1);
+              } else {
+                u = base + u;
+              }
+              req.url = u;
             }
           } catch (e) {}
           return req;
