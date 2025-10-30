@@ -85,7 +85,21 @@ const html = `<!doctype html>
         url: './openapi.json',
         dom_id: '#swagger-ui',
         presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
-        layout: 'BaseLayout'
+        layout: 'BaseLayout',
+        // Ensure requests go to the GitHub Pages subpath (repo name)
+        // so "/kel/..." becomes "/<repo>/kel/..." when hosted under Pages.
+        requestInterceptor: (req) => {
+          try {
+            const pageDir = window.location.pathname.replace(/\/[^/]*$/, '/');
+            const base = pageDir.endsWith('/') ? pageDir : pageDir + '/';
+            if (req.url.startsWith('/')) {
+              req.url = base + req.url.slice(1);
+            } else if (!/^https?:\/\//i.test(req.url)) {
+              req.url = base + req.url.replace(/^\.\/?/, '');
+            }
+          } catch {}
+          return req;
+        }
       })
     </script>
   </body>
