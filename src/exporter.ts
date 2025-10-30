@@ -74,7 +74,23 @@ const html = `<!doctype html>
     <title>KERI Static Data API</title>
     <link rel="stylesheet" href="./${swaggerAssetsDir}/swagger-ui.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style> body { margin: 0 } </style>
+    <style>
+      body { margin: 0; background: #111; }
+      .swagger-ui, .swagger-ui .info, .swagger-ui .opblock, .swagger-ui .scheme-container,
+      .swagger-ui .topbar, .swagger-ui .information-container, .swagger-ui .wrapper { color: #e6e6e6; }
+      .swagger-ui .opblock-tag, .swagger-ui .opblock .opblock-summary, .swagger-ui .model-title { color: #e6e6e6; }
+      .swagger-ui .opblock { background: #1a1a1a; border-color: #333; }
+      .swagger-ui .info .title, .swagger-ui .markdown p, .swagger-ui .markdown h1, .swagger-ui .markdown h2,
+      .swagger-ui .markdown h3, .swagger-ui .markdown h4, .swagger-ui .markdown h5 { color: #fafafa; }
+      .swagger-ui .tab li { color: #ddd; }
+      .swagger-ui .btn, .swagger-ui .opblock .opblock-summary-control { background: #222; color: #eee; border-color: #444; }
+      .swagger-ui .parameters-col_description, .swagger-ui .response-col_description { color: #ddd; }
+      .swagger-ui .responses-inner { background: #161616; }
+      .swagger-ui .response .response-control-media-type__accept-message { color: #bbb; }
+      .swagger-ui .copy-to-clipboard { background: #222; }
+      .swagger-ui .model { color: #ddd; }
+      .swagger-ui .json-schema-2020-12__example, .swagger-ui .json-schema-2020-12__title { color: #ddd; }
+    </style>
   </head>
   <body>
     <div id="swagger-ui"></div>
@@ -86,6 +102,7 @@ const html = `<!doctype html>
         dom_id: '#swagger-ui',
         presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
         layout: 'BaseLayout',
+        syntaxHighlight: { activate: true, theme: 'monokai' },
         // Ensure requests go to the GitHub Pages subpath (repo name)
         // so "/kel/..." becomes "/<repo>/kel/..." when hosted under Pages.
         requestInterceptor: function (req) {
@@ -110,6 +127,20 @@ const html = `<!doctype html>
                 u = u + '.json';
               }
               req.url = u;
+            } else {
+              // Absolute URL: if same-origin Pages URL, normalize under pageDir and append .json when needed
+              var loc = window.location;
+              var origin = (loc.origin) ? loc.origin : (loc.protocol + '//' + loc.host);
+              if (u.indexOf(origin) === 0) {
+                var rel = u.slice(origin.length);
+                if (rel.charAt(0) !== '/') rel = '/' + rel;
+                if (rel.indexOf(pageDir) !== 0) rel = pageDir.replace(/\/$/, '') + rel;
+                var needsJsonAbs = (rel.indexOf('/kel/') >= 0 || rel.indexOf('/ksn/') >= 0 || rel.indexOf('/tel/') >= 0);
+                if (needsJsonAbs && rel.slice(-5).toLowerCase() !== '.json') {
+                  rel = rel + '.json';
+                }
+                req.url = origin + rel;
+              }
             }
           } catch (e) {}
           return req;
