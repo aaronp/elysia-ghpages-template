@@ -108,13 +108,19 @@ const swConfig = `
   function toBase(){
     var p = window.location.pathname;
     var i = p.lastIndexOf('/');
-    var d = i >= 0 ? p.slice(0, i + 1) : '/';
-    return d.charAt(d.length - 1) === '/' ? d : (d + '/');
+    var d = (i >= 0) ? p.slice(0, i + 1) : '/';
+    if (d.length === 0) { d = '/'; }
+    if (d.charAt(d.length - 1) !== '/') { d = d + '/'; }
+    return d;
   }
   function sameOrigin(u){
     var loc = window.location;
-    var o = loc.origin ? loc.origin : (loc.protocol + '//' + loc.host);
+    var o = (loc.origin) ? loc.origin : (loc.protocol + '//' + loc.host);
     return u.indexOf(o) === 0;
+  }
+  function trimTrailingSlash(s){
+    if (!s) return s;
+    return (s.charAt(s.length - 1) === '/') ? s.slice(0, -1) : s;
   }
   window.ui = SwaggerUIBundle({
     url: './openapi.json',
@@ -123,23 +129,27 @@ const swConfig = `
     layout: 'BaseLayout',
     syntaxHighlight: { activate: true, theme: 'monokai' },
     requestInterceptor: function(req){
-      try{
+      try {
         var base = toBase();
         var u = req.url;
         var isHttp = /^https?:\/\//i.test(u);
-        if(!isHttp){
-          if(u.slice(0,2)==='./') u = u.slice(2);
-          if(u.charAt(0)==='/') u = base + u.slice(1); else u = base + u;
-          if((u.indexOf('/kel/')>=0||u.indexOf('/ksn/')>=0||u.indexOf('/tel/')>=0) && u.slice(-5).toLowerCase()!=='.json') u = u + '.json';
+        if (!isHttp) {
+          if (u.slice(0, 2) === './') { u = u.slice(2); }
+          if (u.charAt(0) === '/') { u = base + u.slice(1); } else { u = base + u; }
+          var isDataRoute = (u.indexOf('/kel/') >= 0 || u.indexOf('/ksn/') >= 0 || u.indexOf('/tel/') >= 0);
+          if (isDataRoute && u.slice(-5).toLowerCase() !== '.json') { u = u + '.json'; }
           req.url = u;
-        }else if(sameOrigin(u)){
-          var loc = window.location; var o = loc.origin?loc.origin:(loc.protocol+'//'+loc.host);
-          var rel = u.slice(o.length); if(rel.charAt(0)!=='/') rel = '/' + rel;
-          if(rel.indexOf(base)!==0) rel = base.replace(/\/$/, '') + rel;
-          if((rel.indexOf('/kel/')>=0||rel.indexOf('/ksn/')>=0||rel.indexOf('/tel/')>=0) && rel.slice(-5).toLowerCase()!=='.json') rel = rel + '.json';
+        } else if (sameOrigin(u)) {
+          var loc = window.location; var o = (loc.origin) ? loc.origin : (loc.protocol + '//' + loc.host);
+          var rel = u.slice(o.length);
+          if (rel.charAt(0) !== '/') { rel = '/' + rel; }
+          var baseNoSlash = trimTrailingSlash(base);
+          if (rel.indexOf(baseNoSlash) !== 0) { rel = baseNoSlash + rel; }
+          var isDataRouteAbs = (rel.indexOf('/kel/') >= 0 || rel.indexOf('/ksn/') >= 0 || rel.indexOf('/tel/') >= 0);
+          if (isDataRouteAbs && rel.slice(-5).toLowerCase() !== '.json') { rel = rel + '.json'; }
           req.url = o + rel;
         }
-      }catch(e){}
+      } catch (e) {}
       return req;
     }
   });

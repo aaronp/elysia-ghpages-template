@@ -54,6 +54,21 @@ bun run export
      `https://<user>.github.io/<repo>/openapi.json`.
    - Data is served statically at the same relative paths (e.g., `/kel/...`), so external clients can fetch files directly.
 
+## Client SDK generation (Bun)
+
+Generate a TypeScript client using the published OpenAPI (or a local export):
+
+```bash
+cd client
+# Option A: from published GitHub Pages URL
+OPENAPI_URL="https://<user>.github.io/<repo>/openapi.json" bun run gen
+
+# Option B: from local export (after bun run export)
+bun run gen
+```
+
+- Output: `client/src/api/client.ts` (fetch-based client, typed models)
+- You can commit this to application repos that consume the API.
 ### Installer details
 - The installer downloads a tarball from GitHub and copies files into the target directory.
 - It accepts:
