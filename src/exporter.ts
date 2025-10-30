@@ -88,16 +88,16 @@ const html = `<!doctype html>
         layout: 'BaseLayout',
         // Ensure requests go to the GitHub Pages subpath (repo name)
         // so "/kel/..." becomes "/<repo>/kel/..." when hosted under Pages.
-        requestInterceptor: (req) => {
+        requestInterceptor: function (req) {
           try {
-            const pageDir = window.location.pathname.replace(/\/[^/]*$/, '/');
-            const base = pageDir.endsWith('/') ? pageDir : pageDir + '/';
-            if (req.url.startsWith('/')) {
+            var pageDir = window.location.pathname.replace(/\/[^/]*$/, '/');
+            var base = pageDir.charAt(pageDir.length - 1) === '/' ? pageDir : (pageDir + '/');
+            if (/^\//.test(req.url)) {
               req.url = base + req.url.slice(1);
             } else if (!/^https?:\/\//i.test(req.url)) {
               req.url = base + req.url.replace(/^\.\/?/, '');
             }
-          } catch {}
+          } catch (e) {}
           return req;
         }
       })
