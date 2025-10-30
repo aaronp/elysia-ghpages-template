@@ -96,61 +96,57 @@ const html = `<!doctype html>
     <div id="swagger-ui"></div>
     <script src="./${swaggerAssetsDir}/swagger-ui-bundle.js"></script>
     <script src="./${swaggerAssetsDir}/swagger-ui-standalone-preset.js"></script>
-    <script>
-      window.ui = SwaggerUIBundle({
-        url: './openapi.json',
-        dom_id: '#swagger-ui',
-        presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
-        layout: 'BaseLayout',
-        syntaxHighlight: { activate: true, theme: 'monokai' },
-        // Ensure requests go to the GitHub Pages subpath (repo name)
-        // so "/kel/..." becomes "/<repo>/kel/..." when hosted under Pages.
-        requestInterceptor: function (req) {
-          try {
-            var path = window.location.pathname;
-            var lastSlash = path.lastIndexOf('/');
-            var pageDir = lastSlash >= 0 ? path.slice(0, lastSlash + 1) : '/';
-            var base = pageDir.charAt(pageDir.length - 1) === '/' ? pageDir : (pageDir + '/');
-
-            var u = req.url;
-            var isHttp = /^https?:\/\//i.test(u);
-            if (!isHttp) {
-              if (u.slice(0, 2) === './') u = u.slice(2);
-              if (u.charAt(0) === '/') {
-                u = base + u.slice(1);
-              } else {
-                u = base + u;
-              }
-              // Append .json for API routes so static hosting finds files
-              var needsJson = (u.indexOf('/kel/') >= 0 || u.indexOf('/ksn/') >= 0 || u.indexOf('/tel/') >= 0);
-              if (needsJson && u.slice(-5).toLowerCase() !== '.json') {
-                u = u + '.json';
-              }
-              req.url = u;
-            } else {
-              // Absolute URL: if same-origin Pages URL, normalize under pageDir and append .json when needed
-              var loc = window.location;
-              var origin = (loc.origin) ? loc.origin : (loc.protocol + '//' + loc.host);
-              if (u.indexOf(origin) === 0) {
-                var rel = u.slice(origin.length);
-                if (rel.charAt(0) !== '/') rel = '/' + rel;
-                if (rel.indexOf(pageDir) !== 0) rel = pageDir.replace(/\/$/, '') + rel;
-                var needsJsonAbs = (rel.indexOf('/kel/') >= 0 || rel.indexOf('/ksn/') >= 0 || rel.indexOf('/tel/') >= 0);
-                if (needsJsonAbs && rel.slice(-5).toLowerCase() !== '.json') {
-                  rel = rel + '.json';
-                }
-                req.url = origin + rel;
-              }
-            }
-          } catch (e) {}
-          return req;
-        }
-      })
-    </script>
+    <script src="./sw-config.js"></script>
   </body>
 </html>`
 
 writeFileSync(join(outRoot, 'index.html'), html)
+
+// Write external Swagger UI config to avoid inline parsing issues
+const swConfig = `
+(function(){
+  function toBase(){
+    var p = window.location.pathname;
+    var i = p.lastIndexOf('/');
+    var d = i >= 0 ? p.slice(0, i + 1) : '/';
+    return d.charAt(d.length - 1) === '/' ? d : (d + '/');
+  }
+  function sameOrigin(u){
+    var loc = window.location;
+    var o = loc.origin ? loc.origin : (loc.protocol + '//' + loc.host);
+    return u.indexOf(o) === 0;
+  }
+  window.ui = SwaggerUIBundle({
+    url: './openapi.json',
+    dom_id: '#swagger-ui',
+    presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+    layout: 'BaseLayout',
+    syntaxHighlight: { activate: true, theme: 'monokai' },
+    requestInterceptor: function(req){
+      try{
+        var base = toBase();
+        var u = req.url;
+        var isHttp = /^https?:\/\//i.test(u);
+        if(!isHttp){
+          if(u.slice(0,2)==='./') u = u.slice(2);
+          if(u.charAt(0)==='/') u = base + u.slice(1); else u = base + u;
+          if((u.indexOf('/kel/')>=0||u.indexOf('/ksn/')>=0||u.indexOf('/tel/')>=0) && u.slice(-5).toLowerCase()!=='.json') u = u + '.json';
+          req.url = u;
+        }else if(sameOrigin(u)){
+          var loc = window.location; var o = loc.origin?loc.origin:(loc.protocol+'//'+loc.host);
+          var rel = u.slice(o.length); if(rel.charAt(0)!=='/') rel = '/' + rel;
+          if(rel.indexOf(base)!==0) rel = base.replace(/\/$/, '') + rel;
+          if((rel.indexOf('/kel/')>=0||rel.indexOf('/ksn/')>=0||rel.indexOf('/tel/')>=0) && rel.slice(-5).toLowerCase()!=='.json') rel = rel + '.json';
+          req.url = o + rel;
+        }
+      }catch(e){}
+      return req;
+    }
+  });
+})();
+`
+
+writeFileSync(join(outRoot, 'sw-config.js'), swConfig)
 
 // Copy data directories to pages/
 for (const base of baseDirs) {
