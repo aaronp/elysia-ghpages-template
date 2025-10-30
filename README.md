@@ -26,7 +26,18 @@ bun run dev
 - Browse: http://localhost:3000/swagger (interactive docs)
 - Example: http://localhost:3000/kel/sample-id/data  (if `data/kel/sample-id/data.json` exists)
 
-3) **Generate static pages for GitHub Pages**:
+3) **Install this template into a new directory (one-liner)**:
+```bash
+curl -fsSL https://raw.githubusercontent.com/<owner>/<repo>/<branch>/scripts/install.sh \
+  | bash -s -- --repo <owner>/<repo> --branch <branch> --dir my-project
+```
+- Replace `<owner>/<repo>` and `<branch>` (defaults to `master` if omitted). Example:
+```bash
+curl -fsSL https://raw.githubusercontent.com/<owner>/<repo>/master/scripts/install.sh \
+  | bash -s -- --repo <owner>/<repo> --dir my-keri-api
+```
+
+4) **Generate static pages for GitHub Pages**:
 ```bash
 bun run export
 ```
@@ -36,12 +47,23 @@ bun run export
   - `/swagger-ui-assets/*`
   - `/kel`, `/ksn`, `/tel` copied from `./data`
 
-4) **Publish with GitHub Pages**:
+5) **Publish with GitHub Pages**:
    - Commit the repo
    - In your GitHub repository settings, enable **Pages** for the `pages/` folder on the `main` branch.
    - Your Swagger UI will be available at `https://<user>.github.io/<repo>/` and the `openapi.json` at
      `https://<user>.github.io/<repo>/openapi.json`.
    - Data is served statically at the same relative paths (e.g., `/kel/...`), so external clients can fetch files directly.
+
+### Installer details
+- The installer downloads a tarball from GitHub and copies files into the target directory.
+- It accepts:
+  - `--repo <owner/repo>` (required)
+  - `--branch <branch>` (default: `master`)
+  - `--dir <target-dir>` (default: current directory)
+  - `--no-install` to skip `bun install`
+- After installation:
+  - `bun run dev` to serve docs at `http://localhost:3000/swagger`
+  - `bun run export` to produce static site under `./pages/`
 
 ## Directory Structure
 ```text
